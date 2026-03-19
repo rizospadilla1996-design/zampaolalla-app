@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cuadrante de limpieza</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gradient-to-br from-rose-100 via-blue-100 to-green-100 min-h-screen p-4">
+
+<div class="max-w-5xl mx-auto">
+  <h1 class="text-4xl font-bold text-center mb-4">🧹 Cuadrante de limpieza ZAMPAOLALLA</h1>
+
+  <div class="bg-white/80 backdrop-blur p-4 rounded-2xl shadow mb-6 text-sm text-gray-700">
+    <h2 class="font-semibold mb-2">📌 Cómo usar la aplicación:</h2>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Las tareas se asignan automáticamente cada semana.</li>
+      <li>Cada persona tiene una tarea distinta.</li>
+      <li>Pulsa en "Por hacer" cuando termines tu tarea.</li>
+      <li>Los cambios se sincronizan en tiempo real con todos.</li>
+    </ul>
+  </div>
+
+  <div id="app" class="space-y-6"></div>
+</div>
+
+<script>
+// 🔥 Configuración real de Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBinDHTpGqSsCy36G5Z0pVcHUAsADl-bvk",
+  authDomain: "limpieza-zampaolalla.firebaseapp.com",
+  databaseURL: "https://limpieza-zampaolalla-default-rtdb.firebaseio.com",
+  projectId: "limpieza-zampaolalla",
+  storageBucket: "limpieza-zampaolalla.firebasestorage.app",
+  messagingSenderId: "592506554598",
+  appId: "1:592506554598:web:f23c8ae24ec9714773d327",
+  measurementId: "G-VEB5WFZZ4C"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const personas = ["Alfonso", "Lorena", "Sisi", "Pablo"];
+const tareas = ["SALÓN", "COCINA", "BAÑO PEQUEÑO Y PASILLO", "BAÑO GRANDE"];
+
+let estadoGlobal = {};
+
+function getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+}
+
+function getWeekRange(offset = 0) {
+  const today = new Date();
+  const monday = getMonday(today);
+  monday.setDate(monday.getDate() + offset * 7);
+
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+
+  return {
+    key: monday.toISOString().split('T')[0],
+    label: `${formatDate(monday)} → ${formatDate(sunday)}`
+  };
+}
+
+function asignarTareas(weekKey) {
+  const baseIndex = new Date(weekKey).getTime() / (1000*60*60*24*7);
+  const asignaciones = {};
+
+  tareas.forEach((tarea, i) => {
+    const persona = personas[(i + Math.floor(baseIndex)) % personas.length];
+    asignaciones[tarea] = persona;
+  });
+
+  return asignaciones;
+}
+
+function toggleEstado(weekKey, tarea) {
+  const ref = db.ref('tareas/' + weekKey + '/' + tarea);
+  const actual = estadoGlobal?.[weekKey]?.[tarea] || false;
+  ref.set(!actual);
+}
+
+function renderSemana(titulo, offset, isCurrent = false) {
+  const week = getWeekRange(offset);
+  const asignaciones = asignarTareas(week.key);
+  const estado = estadoGlobal[week.key] || {};
+
+  return `
+    <div class="p-5 rounded-3xl shadow ${isCurrent ? 'bg-white scale-105 border-2 border-blue-300' : 'bg-white/70'}">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">${titulo}</h2>
+        <span class="text-lg font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-xl">${week.label}</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        ${tareas.map(tarea => `
+          <div class="p-4 rounded-2xl border flex flex-col gap-2 ${estado[tarea] ? 'bg-green-200' : 'bg-white'}">
+            <div class="text-sm text-gray-500">${tarea}</div>
+            <div class="text-2xl font-bold">${asignaciones[tarea]}</div>
+            <button onclick="toggleEstado('${week.key}','${tarea}')"
+              class="mt-2 px-3 py-1 rounded-lg text-sm w-fit ${estado[tarea] ? 'bg-green-500 text-white' : 'bg-yellow-200'}">
+              ${estado[tarea] ? '✔ Hecho' : 'Por hacer'}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  document.getElementById('app').innerHTML = `
+    ${renderSemana('Semana pasada', -1)}
+    ${renderSemana('Esta semana', 0, true)}
+    ${renderSemana('Próxima semana', 1)}
+  `;
+}
+
+// Escuchar cambios en tiempo real desde Firebase
+firebase.database().ref('tareas').on('value', (snapshot) => {
+  estadoGlobal = snapshot.val() || {};
+  render();
+});
+</script>
+
+</body>
+</html>
