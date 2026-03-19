@@ -10,13 +10,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
-<body class="bg-gradient-to-br from-rose-100 via-blue-100 to-green-100 min-h-screen p-4">
+<body class="bg-gradient-to-b from-rose-100 via-blue-100 to-green-100 min-h-screen p-4 flex flex-col items-center">
 
-<div class="max-w-5xl mx-auto">
-  <h1 class="text-4xl font-bold text-center mb-4">🧹 Cuadrante de limpieza ZAMPAOLALLA</h1>
+<div class="w-full max-w-md">
+  <h1 class="text-3xl font-bold text-center mb-4">🧹 Cuadrante de limpieza ZAMPAOLALLA</h1>
 
-  <div class="bg-white/80 backdrop-blur p-4 rounded-2xl shadow mb-6 text-sm text-gray-700">
-    <h2 class="font-semibold mb-2">📌 Cómo usar la aplicación:</h2>
+  <div class="bg-white/90 backdrop-blur p-4 rounded-2xl shadow mb-6 text-sm text-gray-700">
+    <h2 class="font-semibold mb-2 text-center">📌 Cómo usar la aplicación:</h2>
     <ul class="list-disc pl-5 space-y-1">
       <li>Las tareas se asignan automáticamente cada semana.</li>
       <li>Cada persona tiene una tarea distinta.</li>
@@ -25,11 +25,11 @@
     </ul>
   </div>
 
-  <div id="app" class="space-y-6"></div>
+  <div id="app" class="space-y-6 w-full"></div>
 </div>
 
 <script>
-// 🔥 Configuración real de Firebase
+// Configuración real de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBinDHTpGqSsCy36G5Z0pVcHUAsADl-bvk",
   authDomain: "limpieza-zampaolalla.firebaseapp.com",
@@ -99,18 +99,18 @@ function renderSemana(titulo, offset, isCurrent = false) {
   const estado = estadoGlobal[week.key] || {};
 
   return `
-    <div class="p-5 rounded-3xl shadow ${isCurrent ? 'bg-white scale-110 border-4 border-blue-400' : 'bg-white/70'}">
-      <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold">${titulo}</h2>
+    <div class="p-5 rounded-3xl shadow ${isCurrent ? 'bg-white scale-105 border-4 border-blue-400' : 'bg-white/80'}">
+      <div class="flex flex-col items-center mb-4">
+        <h2 class="text-xl font-semibold mb-1">${titulo}</h2>
         <span class="text-lg font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-xl">${week.label}</span>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-4 w-full">
         ${tareas.map(tarea => `
-          <div class="p-4 rounded-2xl border flex flex-col gap-2 ${estado[tarea] ? 'bg-green-200' : 'bg-white'}">
+          <div class="p-4 rounded-2xl border flex flex-col gap-2 items-center ${estado[tarea] ? 'bg-green-200' : 'bg-white'}">
             <div class="text-sm text-gray-500">${tarea}</div>
             <div class="text-2xl font-bold">${asignaciones[tarea]}</div>
             <button onclick="toggleEstado('${week.key}','${tarea}')"
-              class="mt-2 px-3 py-1 rounded-lg text-sm w-fit ${estado[tarea] ? 'bg-green-500 text-white' : 'bg-yellow-200'}">
+              class="mt-2 px-6 py-2 rounded-lg text-lg w-full ${estado[tarea] ? 'bg-green-500 text-white' : 'bg-yellow-200'}">
               ${estado[tarea] ? '✔ Hecho' : 'Por hacer'}
             </button>
           </div>
